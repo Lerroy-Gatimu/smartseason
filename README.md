@@ -1,274 +1,182 @@
-# 🌱 SmartSeason — Field Monitoring System
+# SmartSeason
 
-A web application for tracking crop progress across multiple fields during a growing season.
+A field monitoring web application for tracking crop progress across multiple farm fields during a growing season. Administrators manage fields and agents, while field agents log observations and stage updates for their assigned fields.
 
-Built with **Django** (server-side rendering), **plain CSS**, **vanilla JavaScript**, and **PostgreSQL**.
+Built with Django, plain CSS, vanilla JavaScript, and MySQL.
 
 ---
 
-## Demo Credentials
+## Table of Contents
 
-After running `seed_data` (see setup below):
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Local Setup](#local-setup)
+- [Demo Credentials](#demo-credentials)
+- [Design Notes](#design-notes)
 
-| Role            | Username | Password  |
-|-----------------|----------|-----------|
-| Admin/Coord.    | `admin`  | `admin123`|
-| Field Agent 1   | `agent1` | `agent123`|
-| Field Agent 2   | `agent2` | `agent123`|
+---
+
+## Features
+
+- Role-based access control with two user types: Admin and Field Agent
+- Admins can create, assign, edit, and delete fields and manage user accounts
+- Field agents can view and log updates only on fields assigned to them
+- Computed field status (Active, At Risk, Completed) based on crop stage and update history
+- Full update history per field, acting as an audit trail
+- Responsive layout with mobile sidebar navigation
 
 ---
 
 ## Project Structure
 
 ```
-smartseason/               ← project root
-├── smartseason/           ← Django project config (settings, urls, wsgi)
+smartseason/
+├── smartseason/               Django project configuration
 │   ├── settings.py
 │   ├── urls.py
 │   └── wsgi.py
-├── accounts/              ← Custom User model, login, user management
-│   ├── models.py          ← User with role field (admin / field_agent)
+├── accounts/                  Custom user model, login, user management
+│   ├── models.py
 │   ├── views.py
 │   ├── forms.py
 │   └── urls.py
-├── fields/                ← Core app: Field + FieldUpdate models
-│   ├── models.py          ← Field (with computed status), FieldUpdate
-│   ├── views.py           ← Dashboard, CRUD, log update
+├── fields/                    Core application: fields and updates
+│   ├── models.py
+│   ├── views.py
 │   ├── forms.py
 │   └── urls.py
-├── core/                  ← Shared utilities
+├── core/
 │   └── management/
 │       └── commands/
-│           └── seed_data.py   ← Creates demo data
-├── templates/             ← All HTML templates
-│   ├── base.html          ← Navbar, sidebar, flash messages layout
+│           └── seed_data.py   Populates the database with demo data
+├── templates/
+│   ├── base.html
 │   ├── accounts/
-│   │   ├── login.html
-│   │   ├── manage_users.html
-│   │   └── confirm_delete_user.html
 │   └── fields/
-│       ├── admin_dashboard.html
-│       ├── agent_dashboard.html
-│       ├── field_list.html
-│       ├── field_detail.html
-│       ├── field_form.html    ← Used for both create and edit
-│       ├── log_update.html
-│       └── field_confirm_delete.html
 ├── static/
-│   ├── css/main.css       ← All styles (earthy palette, responsive)
-│   └── js/main.js         ← Hamburger menu, alerts, active nav
-├── requirements.txt
+│   ├── css/main.css
+│   └── js/main.js
 ├── manage.py
-└── pythonanywhere_wsgi.py ← Paste into PA's WSGI editor
+├── requirements.txt
+└── .env
 ```
 
 ---
 
-## Local Setup (Step by Step)
+## Prerequisites
 
-### Prerequisites
 - Python 3.10 or newer
-- PostgreSQL installed and running
-- Git (optional)
+- MySQL 8.0 or newer, installed and running
+- pip
 
-### Step 1 — Create the database
+---
 
-Open your PostgreSQL prompt (or pgAdmin) and run:
+## Local Setup
+
+### 1. Create the database
+
+Open a MySQL prompt and run:
 
 ```sql
-CREATE DATABASE smartseason_db;
-CREATE USER smartseason_user WITH PASSWORD 'your_password_here';
-GRANT ALL PRIVILEGES ON DATABASE smartseason_db TO smartseason_user;
+CREATE DATABASE smartseason_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-### Step 2 — Create a virtual environment
+### 2. Create a virtual environment
 
 ```bash
 cd smartseason
 python -m venv venv
 
-# Activate it:
-# On Windows:
+# Windows
 venv\Scripts\activate
-# On macOS/Linux:
+
+# macOS / Linux
 source venv/bin/activate
 ```
 
-### Step 3 — Install dependencies
+### 3. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 4 — Configure the database
+### 4. Configure environment variables
 
-Open `smartseason/settings.py` and update the `DATABASES` section with your
-PostgreSQL credentials, OR set environment variables:
+Create a `.env` file in the project root (alongside `manage.py`) with the following:
 
-```bash
-# Windows (Command Prompt)
-set DB_NAME=smartseason_db
-set DB_USER=smartseason_user
-set DB_PASSWORD=your_password_here
-
-# macOS/Linux
-export DB_NAME=smartseason_db
-export DB_USER=smartseason_user
-export DB_PASSWORD=your_password_here
+```
+SECRET_KEY=your-secret-key-here
+DB_NAME=smartseason_db
+DB_USER=root
+DB_PASSWORD=your_mysql_password
+DB_HOST=localhost
+DB_PORT=3306
 ```
 
-### Step 5 — Run migrations
+### 5. Run migrations
 
 ```bash
+python manage.py makemigrations accounts fields
 python manage.py migrate
 ```
 
-This creates all the database tables.
-
-### Step 6 — Create demo data
+### 6. Load demo data
 
 ```bash
 python manage.py seed_data
 ```
 
-This creates the demo users and 6 sample fields so you can explore the app immediately.
+This creates sample users and fields so the application can be explored immediately after setup.
 
-### Step 7 — Collect static files (optional for local dev)
+### 7. Configure static files
 
-```bash
-python manage.py collectstatic
+In `settings.py`, ensure this line reads:
+
+```python
+STATICFILES_DIRS = [BASE_DIR / 'static']
 ```
 
-### Step 8 — Run the development server
+### 8. Start the development server
 
 ```bash
 python manage.py runserver
 ```
 
-Visit: **http://127.0.0.1:8000**
+The application will be available at http://127.0.0.1:8000.
 
 ---
 
-## Deploying to PythonAnywhere
+## Demo Credentials
 
-PythonAnywhere is a hosting platform that supports Django natively. Here is the full process.
+These accounts are created by the `seed_data` command.
 
-### 1. Create a PythonAnywhere account
-
-Go to https://www.pythonanywhere.com and sign up for a free account.
-
-### 2. Upload your project
-
-In PythonAnywhere, open a **Bash console** and clone or upload your project:
-
-```bash
-# Option A — clone from GitHub
-git clone https://github.com/yourusername/smartseason.git ~/smartseason
-
-# Option B — upload a zip
-# Use the "Files" tab to upload a zip, then unzip it:
-unzip smartseason.zip -d ~/smartseason
-```
-
-### 3. Create a virtual environment on PythonAnywhere
-
-```bash
-cd ~/smartseason
-python3.10 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 4. Set up PostgreSQL
-
-PythonAnywhere's **free plan** only includes MySQL. For PostgreSQL you have two options:
-
-**Option A (Recommended for free plan):** Use an external PostgreSQL provider like
-[Supabase](https://supabase.com) (free tier) or [Neon](https://neon.tech) (free tier).
-They give you a connection string — use the host, port, user, password, and db name
-from that string in your settings.
-
-**Option B:** Upgrade to a PythonAnywhere paid plan, which includes PostgreSQL.
-
-### 5. Configure the WSGI file
-
-In PythonAnywhere:
-1. Go to the **Web** tab
-2. Click **"Add a new web app"** → Manual configuration → Python 3.10
-3. Click the **WSGI configuration file** link
-4. Replace its entire contents with the contents of `pythonanywhere_wsgi.py`
-5. Update `yourusername` and the database credentials in that file
-6. Click **Save**
-
-### 6. Configure static files
-
-In the **Web** tab, scroll to "Static files" and add:
-
-| URL      | Directory                                      |
-|----------|------------------------------------------------|
-| `/static/` | `/home/yourusername/smartseason/staticfiles/` |
-
-Then in your Bash console:
-
-```bash
-cd ~/smartseason
-source venv/bin/activate
-python manage.py collectstatic --noinput
-```
-
-### 7. Run migrations on PythonAnywhere
-
-```bash
-cd ~/smartseason
-source venv/bin/activate
-python manage.py migrate
-python manage.py seed_data
-```
-
-### 8. Reload the web app
-
-Back in the Web tab, click the big green **Reload** button.
-
-Visit `yourusername.pythonanywhere.com` — your app is live!
+| Role         | Username | Password  |
+|--------------|----------|-----------|
+| Admin        | admin    | admin123  |
+| Field Agent  | agent1   | agent123  |
+| Field Agent  | agent2   | agent123  |
 
 ---
 
-## Design Decisions
+## Design Notes
 
-### Authentication
-- Django's built-in `AbstractUser` is extended with a single `role` field (`admin` or `field_agent`).
-- This keeps auth simple — one user table, all of Django's session/password machinery included.
-- No third-party auth packages needed.
+### User Roles and Access Control
 
-### Access Control
-- A custom `admin_required` decorator (wrapping `@login_required`) checks the role and returns HTTP 403 for non-admins.
-- Field agents are further restricted in views: they can only see and update fields where `assigned_to == request.user`.
-- This is enforced at the view level, not just the template level, so it cannot be bypassed by navigating directly to a URL.
+The built-in Django `AbstractUser` model is extended with a single `role` field. Two roles exist: `admin` and `field_agent`. A custom `admin_required` decorator enforces role checks at the view level, returning HTTP 403 for unauthorised access. Field agents are additionally restricted so they can only view or update fields where they are the assigned agent. This is enforced in the view logic, not just in templates.
 
-### Field Status Logic
-Status is a **computed property** on the `Field` model — it is never stored in the database. It is recalculated fresh every time it is needed from the field's current data. This avoids stale data.
+### Field Status
 
-The three rules, applied in order:
+Status is a computed property on the `Field` model and is never stored in the database. It is recalculated on each access from the field's current data. The rules applied in order are:
 
-1. **Completed** — `current_stage == 'harvested'`
-2. **At Risk** — either:
-   - Today is past `expected_harvest_date` and the field is not harvested, OR
-   - The last `FieldUpdate` was more than 7 days ago (stale monitoring), OR
-   - The field has never been updated and was planted more than 7 days ago
-3. **Active** — everything else
+1. **Completed** — the field's current stage is Harvested
+2. **At Risk** — the expected harvest date has passed and the crop is not yet harvested, or no update has been logged in the past 7 days
+3. **Active** — all other cases
 
-### Server-Side Rendering
-All HTML is rendered by Django templates on the server. No JavaScript framework. This keeps the codebase simple, fast-loading, and easy to understand. Vanilla JS is used only for UI enhancements (hamburger menu, auto-dismiss alerts) — the app is fully functional with JavaScript disabled.
+### Update History
 
-### Update History as Audit Trail
-Every time an agent logs a field update, a `FieldUpdate` record is created with a timestamp, the agent who logged it, the stage at that moment, and their notes. This creates an immutable audit trail. The field's `current_stage` is updated to match the latest update automatically.
+Every time an agent logs an update, a `FieldUpdate` record is created with the timestamp, the agent, the crop stage at that time, and their observations. This forms an immutable log of activity for each field. The field's `current_stage` is kept in sync with the most recent update automatically.
 
----
+### Frontend Approach
 
-## Assumptions Made
-
-1. A field can only be assigned to one agent at a time.
-2. Admins can also log field updates (useful for coordinators who are also in the field).
-3. Deleting a user sets `assigned_to = NULL` on their fields (fields are not deleted).
-4. The "At Risk — no update in 7 days" rule applies to all stages except Harvested.
-5. The expected harvest date is optional; without it, only the 7-day staleness rule applies.
+All pages are server-rendered Django templates. No JavaScript framework is used. Vanilla JavaScript handles only UI behaviour such as the mobile navigation menu and dismissible alert messages. The application is fully functional with JavaScript disabled.
