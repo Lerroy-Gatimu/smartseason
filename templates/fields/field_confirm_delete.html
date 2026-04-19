@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Delete Field{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1>Delete Field</h1>
+</div>
+
+<div class="form-card">
+  <div class="danger-zone">
+    <h3>⚠ Confirm Deletion</h3>
+    <p>
+      You are about to permanently delete the field
+      <strong>{{ field.name }}</strong> ({{ field.crop_type }}).
+      All {{ field.updates.count }} update record{{ field.updates.count|pluralize }}
+      will also be deleted. This cannot be undone.
+    </p>
+    <div class="form-actions" style="margin-top: 16px;">
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Delete Field</button>
+      </form>
+      <a href="{% url 'field_detail' field.pk %}" class="btn btn-outline">Cancel</a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

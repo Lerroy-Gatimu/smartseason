@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Good day, {{ request.user.get_full_name|default:request.user.username }}. Here's your season overview.</p>
+  </div>
+  <div class="header-actions">
+    <a href="{% url 'field_create' %}" class="btn btn-leaf">Add Field</a>
+    <a href="{% url 'field_list' %}"   class="btn btn-outline">View All Fields</a>
+  </div>
+</div>
+
+{# ── Summary Stats ──────────────────────────────────────────── #}
+<div class="stats-grid section-gap">
+  <div class="stat-card">
+    <div class="stat-number">{{ total_fields }}</div>
+    <div class="stat-label">Total Fields</div>
+  </div>
+  <div class="stat-card stat-active">
+    <div class="stat-number">{{ status_counts.active }}</div>
+    <div class="stat-label">Active</div>
+  </div>
+  <div class="stat-card stat-at-risk">
+    <div class="stat-number">{{ status_counts.at_risk }}</div>
+    <div class="stat-label">At Risk</div>
+  </div>
+  <div class="stat-card stat-done">
+    <div class="stat-number">{{ status_counts.completed }}</div>
+    <div class="stat-label">Completed</div>
+  </div>
+</div>
+
+{# ── At-Risk Fields Alert ────────────────────────────────────── #}
+{% for field in fields %}
+  {% if field.status == "at_risk" %}
+    {% if forloop.first %}
+    <div class="card section-gap" style="border-left: 4px solid var(--clr-amber); background: var(--clr-amber-lt);">
+      <div class="card-title" style="color: var(--clr-amber);">⚠ Fields Needing Attention</div>
+    {% endif %}
+      <div style="display:flex; align-items:center; justify-content:space-between; padding: 6px 0; border-bottom: 1px solid var(--clr-border);">
+        <span><strong><a href="{% url 'field_detail' field.pk %}">{{ field.name }}</a></strong>
+          — {{ field.crop_type }}
+          {% if field.assigned_to %}· Assigned to {{ field.assigned_to.get_full_name|default:field.assigned_to.username }}{% endif %}
+        </span>
+        <a href="{% url 'field_detail' field.pk %}" class="btn btn-sm btn-outline">View</a>
+      </div>
+    {% if forloop.last %}
+    </div>
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+<div class="two-col section-gap">
+
+  {# ── Recent Activity ──────────────────────────────────────── #}
+  <div>
+    <div class="section-title">Recent Activity</div>
+    <div class="card" style="padding: 16px 20px;">
+      {% if recent_updates %}
+        <div class="activity-feed">
+          {% for update in recent_updates %}
+          <div class="activity-item">
+            <div class="activity-dot"></div>
+            <div class="activity-body">
+              <div class="activity-title">
+                <strong>
+                  <a href="{% url 'field_detail' update.field.pk %}">{{ update.field.name }}</a>
+                </strong>
+                moved to
+                <span class="badge badge-{{ update.stage_at_update }}">{{ update.get_stage_at_update_display }}</span>
+              </div>
+              <div class="activity-time">
+                By {{ update.logged_by.get_full_name|default:update.logged_by.username|default:"Unknown" }}
+                · {{ update.created_at|timesince }} ago
+              </div>
+              {% if update.notes %}
+                <div class="activity-note">{{ update.notes|truncatechars:80 }}</div>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state" style="padding: 32px 0;">
+          <div class="empty-icon"></div>
+          <p>No updates logged yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Agent Overview ───────────────────────────────────────── #}
+  <div>
+    <div class="section-title">Field Agents</div>
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Fields</th>
+              <th>At Risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for agent in agents %}
+            <tr>
+              <td>{{ agent.get_full_name|default:agent.username }}</td>
+              <td>{{ agent.assigned_fields.count }}</td>
+              <td>
+                {% with at_risk_count=0 %}
+                  {# Count at-risk fields per agent #}
+                  {% for f in agent.assigned_fields.all %}
+                    {% if f.status == "at_risk" %}
+                      <span class="badge badge-at_risk">⚠</span>
+                    {% endif %}
+                  {% endfor %}
+                {% endwith %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="3" class="text-muted" style="text-align:center;padding:16px;">
+                No field agents yet.
+                <a href="{% url 'manage_users' %}">Add one →</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div style="margin-top: 12px;">
+      <a href="{% url 'manage_users' %}" class="btn btn-outline btn-sm">Manage Users</a>
+    </div>
+  </div>
+
+</div>
+
+{# ── All Fields Grid ────────────────────────────────────────── #}
+<div class="section-gap">
+  <div class="section-title">All Fields</div>
+
+  {% if fields %}
+    <div class="fields-grid">
+      {% for field in fields %}
+      <article class="field-card status-{{ field.status }}">
+        <div class="field-card-header">
+          <div class="field-card-name">
+            <a href="{% url 'field_detail' field.pk %}">{{ field.name }}</a>
+          </div>
+          <span class="badge badge-{{ field.status }}">{{ field.status_label }}</span>
+        </div>
+
+        <div class="field-card-meta">
+          <span>{{ field.crop_type }}</span>
+          <span>Planted {{ field.planting_date|date:"d M Y" }}</span>
+          {% if field.assigned_to %}
+            <span>{{ field.assigned_to.get_full_name|default:field.assigned_to.username }}</span>
+          {% else %}
+            <span class="text-muted">Unassigned</span>
+          {% endif %}
+          {% if field.location %}
+            <span>{{ field.location }}</span>
+          {% endif %}
+        </div>
+
+        <div class="field-card-footer">
+          <span class="badge badge-{{ field.current_stage }}">{{ field.get_current_stage_display }}</span>
+          <div style="display:flex; gap:6px;">
+            <a href="{% url 'field_detail' field.pk %}" class="btn btn-sm btn-outline">View</a>
+            <a href="{% url 'field_edit' field.pk %}"   class="btn btn-sm btn-primary">Edit</a>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon"></div>
+      <h3>No fields yet</h3>
+      <p>Create your first field to start tracking the season.</p>
+      <a href="{% url 'field_create' %}" class="btn btn-leaf"> Add First Field</a>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

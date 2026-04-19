@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}{{ field.name }}{% endblock %}
+
+{% block content %}
+
+{# ── Page Header ────────────────────────────────────────────── #}
+<div class="page-header">
+  <div>
+    <h1>{{ field.name }}</h1>
+    <p>
+      {{ field.crop_type }}
+      {% if field.location %} ·  {{ field.location }}{% endif %}
+    </p>
+  </div>
+  <div class="header-actions">
+    <span class="badge badge-{{ field.status }}" style="font-size:.85rem; padding: 6px 14px;">
+      {{ field.status_label }}
+    </span>
+    <a href="{% url 'log_update' field.pk %}" class="btn btn-leaf">Log Update</a>
+    {% if request.user.is_admin_role %}
+      <a href="{% url 'field_edit' field.pk %}" class="btn btn-primary">Edit</a>
+    {% endif %}
+  </div>
+</div>
+
+{# ── Info Grid ──────────────────────────────────────────────── #}
+<div class="card section-gap">
+  <div class="info-grid">
+    <div class="info-item">
+      <div class="info-label">Current Stage</div>
+      <div class="info-value">
+        <span class="badge badge-{{ field.current_stage }}">{{ field.get_current_stage_display }}</span>
+      </div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Crop Type</div>
+      <div class="info-value">{{ field.crop_type }}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Planting Date</div>
+      <div class="info-value">{{ field.planting_date|date:"d M Y" }}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Days in Season</div>
+      <div class="info-value">{{ field.days_since_planted }} days</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Expected Harvest</div>
+      <div class="info-value">
+        {% if field.expected_harvest_date %}
+          {{ field.expected_harvest_date|date:"d M Y" }}
+          {% if field.is_overdue %}
+            <span class="badge badge-at_risk" style="margin-left:6px;">Overdue</span>
+          {% endif %}
+        {% else %}
+          <span class="text-muted">Not set</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Assigned To</div>
+      <div class="info-value">
+        {% if field.assigned_to %}
+          {{ field.assigned_to.get_full_name|default:field.assigned_to.username }}
+        {% else %}
+          <span class="text-muted">Unassigned</span>
+        {% endif %}
+      </div>
+    </div>
+    {% if field.location %}
+    <div class="info-item">
+      <div class="info-label">Location</div>
+      <div class="info-value">{{ field.location }}</div>
+    </div>
+    {% endif %}
+    <div class="info-item">
+      <div class="info-label">Total Updates</div>
+      <div class="info-value">{{ updates|length }}</div>
+    </div>
+  </div>
+
+  {% if field.notes %}
+    <div style="padding-top: 16px; border-top: 1px solid var(--clr-border);">
+      <div class="info-label" style="margin-bottom: 6px;">Admin Notes</div>
+      <p style="font-size:.9rem; color: var(--clr-soil);">{{ field.notes }}</p>
+    </div>
+  {% endif %}
+</div>
+
+<div class="two-col section-gap">
+
+  {# ── Update Timeline ──────────────────────────────────────── #}
+  <div>
+    <div class="section-title">Update History</div>
+
+    {% if updates %}
+      <div class="timeline">
+        {% for update in updates %}
+        <div class="timeline-item">
+          <div class="timeline-icon"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="timeline-who">
+                {{ update.logged_by.get_full_name|default:update.logged_by.username|default:"Unknown" }}
+              </span>
+              <span class="badge badge-{{ update.stage_at_update }}">
+                {{ update.get_stage_at_update_display }}
+              </span>
+              <span class="timeline-when">{{ update.created_at|date:"d M Y, H:i" }}</span>
+            </div>
+            <div class="timeline-note">{{ update.notes }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state" style="padding: 32px 0; text-align: left;">
+        <div class="empty-icon"></div>
+        <h3>No updates yet</h3>
+        <p>Be the first to log an update for this field.</p>
+        <a href="{% url 'log_update' field.pk %}" class="btn btn-leaf">Log First Update</a>
+      </div>
+    {% endif %}
+  </div>
+
+  {# ── Quick Actions ────────────────────────────────────────── #}
+  <div>
+    <div class="section-title">Actions</div>
+
+    <div class="card">
+      <div style="display:flex; flex-direction:column; gap: 10px;">
+        <a href="{% url 'log_update' field.pk %}" class="btn btn-leaf">
+          Log New Update
+        </a>
+
+        {% if request.user.is_admin_role %}
+          <a href="{% url 'field_edit' field.pk %}" class="btn btn-primary">
+            Edit Field Details
+          </a>
+          <a href="{% url 'field_delete' field.pk %}" class="btn btn-danger">
+            Delete Field
+          </a>
+        {% endif %}
+
+        {% if request.user.is_admin_role %}
+          <a href="{% url 'field_list' %}" class="btn btn-outline">
+            ← Back to All Fields
+          </a>
+        {% else %}
+          <a href="{% url 'dashboard' %}" class="btn btn-outline">
+            ← Back to Dashboard
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Status Explanation card #}
+    <div class="card mt-16">
+      <div class="card-title">ℹ Status Logic</div>
+      <div style="font-size:.82rem; color: var(--clr-slate); line-height: 1.7;">
+        <p><span class="badge badge-completed">Completed</span> — Stage is Harvested</p>
+        <p style="margin-top:6px;">
+          <span class="badge badge-at_risk">At Risk</span> — No update in 7+ days,
+          or past the expected harvest date
+        </p>
+        <p style="margin-top:6px;">
+          <span class="badge badge-active">Active</span> — Being monitored, on track
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

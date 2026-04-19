@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Log Update — {{ field.name }}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>Log Update</h1>
+    <p>
+      Recording observation for
+      <strong>{{ field.name }}</strong> — {{ field.crop_type }}
+    </p>
+  </div>
+</div>
+
+<div class="two-col">
+
+  {# ── Update Form ──────────────────────────────────────────── #}
+  <div>
+    <div class="form-card" style="max-width: 100%;">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="form-group mb-16">
+          <label for="{{ form.stage_at_update.id_for_label }}">Current Stage *</label>
+          {{ form.stage_at_update }}
+          <span class="text-muted" style="font-size:.78rem;">
+            This will update the field's current stage.
+          </span>
+          {% if form.stage_at_update.errors %}
+            <ul class="errorlist">{% for e in form.stage_at_update.errors %}<li>⚠ {{ e }}</li>{% endfor %}</ul>
+          {% endif %}
+        </div>
+
+        <div class="form-group mb-16">
+          <label for="{{ form.notes.id_for_label }}">Observations / Notes *</label>
+          {{ form.notes }}
+          <span class="text-muted" style="font-size:.78rem;">
+            Include crop health, weather conditions, pests, growth measurements, any issues observed.
+          </span>
+          {% if form.notes.errors %}
+            <ul class="errorlist">{% for e in form.notes.errors %}<li>⚠ {{ e }}</li>{% endfor %}</ul>
+          {% endif %}
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-leaf">✓ Save Update</button>
+          <a href="{% url 'field_detail' field.pk %}" class="btn btn-outline">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# ── Field Info Sidebar ───────────────────────────────────── #}
+  <div>
+    <div class="card">
+      <div class="card-title">Field Info</div>
+      <div class="info-grid" style="grid-template-columns: 1fr;">
+        <div class="info-item">
+          <div class="info-label">Field Name</div>
+          <div class="info-value">{{ field.name }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Crop</div>
+          <div class="info-value">{{ field.crop_type }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Current Stage</div>
+          <div class="info-value">
+            <span class="badge badge-{{ field.current_stage }}">
+              {{ field.get_current_stage_display }}
+            </span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Status</div>
+          <div class="info-value">
+            <span class="badge badge-{{ field.status }}">{{ field.status_label }}</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Days in Season</div>
+          <div class="info-value">{{ field.days_since_planted }} days</div>
+        </div>
+        {% if field.expected_harvest_date %}
+        <div class="info-item">
+          <div class="info-label">Expected Harvest</div>
+          <div class="info-value">{{ field.expected_harvest_date|date:"d M Y" }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Last update #}
+    {% with last_update=field.updates.first %}
+    {% if last_update %}
+    <div class="card mt-16">
+      <div class="card-title">Previous Update</div>
+      <div style="font-size:.85rem; color: var(--clr-slate);">
+        {{ last_update.created_at|timesince }} ago
+        by {{ last_update.logged_by.get_full_name|default:last_update.logged_by.username }}
+      </div>
+      <div style="margin-top:8px; font-size:.88rem;">{{ last_update.notes|truncatechars:120 }}</div>
+    </div>
+    {% endif %}
+    {% endwith %}
+  </div>
+
+</div>
+
+{% endblock %}

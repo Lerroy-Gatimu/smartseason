@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Delete User{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Delete User</h1>
+</div>
+
+<div class="form-card">
+  <div class="danger-zone">
+    <h3>⚠ Confirm Deletion</h3>
+    <p>
+      You are about to permanently delete the user
+      <strong>{{ target_user.username }}</strong>
+      ({{ target_user.get_full_name }}).
+      This action cannot be undone.
+    </p>
+    <div class="form-actions" style="margin-top: 16px;">
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Delete User</button>
+      </form>
+      <a href="{% url 'manage_users' %}" class="btn btn-outline">Cancel</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

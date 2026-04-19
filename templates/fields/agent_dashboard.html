@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}My Fields{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>My Fields</h1>
+    <p>Welcome, {{ request.user.get_full_name|default:request.user.username }}. Here are your assigned fields.</p>
+  </div>
+</div>
+
+{# ── Summary Stats ──────────────────────────────────────────── #}
+<div class="stats-grid section-gap">
+  <div class="stat-card">
+    <div class="stat-number">{{ total_fields }}</div>
+    <div class="stat-label">Assigned Fields</div>
+  </div>
+  <div class="stat-card stat-active">
+    <div class="stat-number">{{ status_counts.active }}</div>
+    <div class="stat-label">Active</div>
+  </div>
+  <div class="stat-card stat-at-risk">
+    <div class="stat-number">{{ status_counts.at_risk }}</div>
+    <div class="stat-label">At Risk</div>
+  </div>
+  <div class="stat-card stat-done">
+    <div class="stat-number">{{ status_counts.completed }}</div>
+    <div class="stat-label">Harvested</div>
+  </div>
+</div>
+
+{# ── At-Risk Alert ─────────────────────────────────────────── #}
+{% for field in fields %}
+  {% if field.status == "at_risk" %}
+    {% if forloop.first %}
+    <div class="card section-gap" style="border-left: 4px solid var(--clr-amber); background: var(--clr-amber-lt);">
+      <div class="card-title" style="color: var(--clr-amber);">⚠ Needs Attention</div>
+      <p style="font-size:.88rem; color: var(--clr-amber); margin-bottom: 12px;">
+        These fields haven't been updated in over 7 days, or are past their expected harvest date.
+      </p>
+    {% endif %}
+      <div style="display:flex; align-items:center; justify-content:space-between; padding: 6px 0; border-bottom: 1px solid #f0d08a;">
+        <span><strong><a href="{% url 'field_detail' field.pk %}">{{ field.name }}</a></strong> — {{ field.crop_type }}</span>
+        <a href="{% url 'log_update' field.pk %}" class="btn btn-sm btn-leaf">Log Update</a>
+      </div>
+    {% if forloop.last %}
+    </div>
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+{# ── My Fields Grid ────────────────────────────────────────── #}
+<div class="section-gap">
+  <div class="section-title">Assigned Fields</div>
+
+  {% if fields %}
+    <div class="fields-grid">
+      {% for field in fields %}
+      <article class="field-card status-{{ field.status }}">
+        <div class="field-card-header">
+          <div class="field-card-name">
+            <a href="{% url 'field_detail' field.pk %}">{{ field.name }}</a>
+          </div>
+          <span class="badge badge-{{ field.status }}">{{ field.status_label }}</span>
+        </div>
+
+        <div class="field-card-meta">
+          <span>{{ field.crop_type }}</span>
+          <span>Planted {{ field.planting_date|date:"d M Y" }}</span>
+          <span>⏱ {{ field.days_since_planted }} days in season</span>
+          {% if field.expected_harvest_date %}
+            <span>Expected harvest: {{ field.expected_harvest_date|date:"d M Y" }}</span>
+          {% endif %}
+          {% if field.location %}
+            <span>{{ field.location }}</span>
+          {% endif %}
+        </div>
+
+        <div class="field-card-footer">
+          <span class="badge badge-{{ field.current_stage }}">{{ field.get_current_stage_display }}</span>
+          <div style="display:flex; gap:6px;">
+            <a href="{% url 'field_detail' field.pk %}"  class="btn btn-sm btn-outline">View</a>
+            <a href="{% url 'log_update' field.pk %}"    class="btn btn-sm btn-leaf">+ Update</a>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon"></div>
+      <h3>No fields assigned yet</h3>
+      <p>Your coordinator hasn't assigned any fields to you. Check back soon.</p>
+    </div>
+  {% endif %}
+</div>
+
+{# ── Recent Updates by Me ──────────────────────────────────── #}
+{% if recent_updates %}
+<div class="section-gap">
+  <div class="section-title"> My Recent Updates</div>
+  <div class="card" style="padding: 16px 20px;">
+    <div class="activity-feed">
+      {% for update in recent_updates %}
+      <div class="activity-item">
+        <div class="activity-dot"></div>
+        <div class="activity-body">
+          <div class="activity-title">
+            <strong><a href="{% url 'field_detail' update.field.pk %}">{{ update.field.name }}</a></strong>
+            → <span class="badge badge-{{ update.stage_at_update }}">{{ update.get_stage_at_update_display }}</span>
+          </div>
+          <div class="activity-time">{{ update.created_at|timesince }} ago</div>
+          {% if update.notes %}
+            <div class="activity-note">{{ update.notes|truncatechars:100 }}</div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

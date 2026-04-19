@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}All Fields{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>All Fields</h1>
+    <p>{{ fields|length }} field{{ fields|length|pluralize }} found.</p>
+  </div>
+  <div class="header-actions">
+    <a href="{% url 'field_create' %}" class="btn btn-leaf">Add Field</a>
+  </div>
+</div>
+
+{# ── Filter Bar ─────────────────────────────────────────────── #}
+<form method="get" class="filter-bar">
+  <input
+    type="search"
+    name="q"
+    value="{{ search_query }}"
+    placeholder="Search by name or crop…"
+    aria-label="Search fields"
+  >
+
+  <select name="stage" aria-label="Filter by stage">
+    <option value="">All Stages</option>
+    {% for value, label in stage_choices %}
+      <option value="{{ value }}" {% if value == current_stage_filter %}selected{% endif %}>
+        {{ label }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <select name="agent" aria-label="Filter by agent">
+    <option value="">All Agents</option>
+    {% for agent in agents %}
+      <option value="{{ agent.pk }}" {% if agent.pk|stringformat:"s" == current_agent_filter %}selected{% endif %}>
+        {{ agent.get_full_name|default:agent.username }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <button type="submit" class="btn btn-outline">Filter</button>
+  {% if search_query or current_stage_filter or current_agent_filter %}
+    <a href="{% url 'field_list' %}" class="btn btn-outline">✕ Clear</a>
+  {% endif %}
+</form>
+
+{# ── Fields Table ───────────────────────────────────────────── #}
+{% if fields %}
+<div class="card" style="padding: 0; overflow: hidden;">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Field Name</th>
+          <th>Crop</th>
+          <th>Stage</th>
+          <th>Status</th>
+          <th>Assigned To</th>
+          <th>Planted</th>
+          <th>Last Update</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for field in fields %}
+        <tr>
+          <td>
+            <a href="{% url 'field_detail' field.pk %}">{{ field.name }}</a>
+            {% if field.location %}
+              <br><span class="text-muted" style="font-size:.75rem;"> {{ field.location }}</span>
+            {% endif %}
+          </td>
+          <td>{{ field.crop_type }}</td>
+          <td><span class="badge badge-{{ field.current_stage }}">{{ field.get_current_stage_display }}</span></td>
+          <td><span class="badge badge-{{ field.status }}">{{ field.status_label }}</span></td>
+          <td>
+            {% if field.assigned_to %}
+              {{ field.assigned_to.get_full_name|default:field.assigned_to.username }}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>{{ field.planting_date|date:"d M Y" }}</td>
+          <td>
+            {% with last=field.updates.first %}
+              {% if last %}
+                <span title="{{ last.created_at }}">{{ last.created_at|timesince }} ago</span>
+              {% else %}
+                <span class="text-muted">Never</span>
+              {% endif %}
+            {% endwith %}
+          </td>
+          <td>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <a href="{% url 'field_detail' field.pk %}" class="btn btn-sm btn-outline">View</a>
+              <a href="{% url 'field_edit' field.pk %}"   class="btn btn-sm btn-primary">Edit</a>
+              <a href="{% url 'field_delete' field.pk %}" class="btn btn-sm btn-danger">Delete</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon"></div>
+  <h3>No fields found</h3>
+  <p>
+    {% if search_query or current_stage_filter or current_agent_filter %}
+      No fields match your filters.
+      <a href="{% url 'field_list' %}">Clear filters</a>
+    {% else %}
+      No fields have been created yet.
+    {% endif %}
+  </p>
+  <a href="{% url 'field_create' %}" class="btn btn-leaf">Add First Field</a>
+</div>
+{% endif %}
+
+{% endblock %}

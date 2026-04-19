@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Manage Users{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Manage Users</h1>
+    <p>Create and manage admin coordinators and field agents.</p>
+  </div>
+</div>
+
+<div class="two-col">
+
+  {# ── Left: User List ──────────────────────────────────────── #}
+  <div>
+    <div class="section-title">All Users</div>
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Username</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td>{{ u.get_full_name|default:"—" }}</td>
+              <td>{{ u.username }}</td>
+              <td>
+                {% if u.role == "admin" %}
+                  <span class="badge badge-growing">Coordinator</span>
+                {% else %}
+                  <span class="badge badge-planted">Field Agent</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if u.is_active %}
+                  <span class="badge badge-active">Active</span>
+                {% else %}
+                  <span class="badge badge-completed">Inactive</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if u != request.user %}
+                  <form method="post" action="{% url 'delete_user' u.pk %}"
+                        data-confirm="Delete user '{{ u.username }}'? This cannot be undone."
+                        style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                  </form>
+                {% else %}
+                  <span class="text-muted">You</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-muted" style="text-align:center; padding: 24px;">
+                No users yet.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {# ── Right: Create User Form ──────────────────────────────── #}
+  <div>
+    <div class="section-title">Add New User</div>
+    <div class="form-card" style="max-width: 100%;">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% for field in form %}
+          <div class="form-group mb-16">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+              <ul class="errorlist">
+                {% for error in field.errors %}
+                  <li>⚠ {{ error }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+            {% if field.help_text %}
+              <span class="text-muted" style="font-size:.78rem;">{{ field.help_text }}</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Create User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

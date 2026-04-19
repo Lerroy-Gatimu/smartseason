@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}{{ form_title }}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>{{ form_title }}</h1>
+    {% if field %}
+      <p>Editing <strong>{{ field.name }}</strong> · {{ field.crop_type }}</p>
+    {% else %}
+      <p>Fill in the details to add a new field to the season.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="form-card" style="max-width: 700px;">
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="form-grid">
+
+      {# Field Name #}
+      <div class="form-group full-width">
+        <label for="{{ form.name.id_for_label }}">Field Name *</label>
+        {{ form.name }}
+        {% if form.name.errors %}
+          <ul class="errorlist">{% for e in form.name.errors %}<li>⚠ {{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      {# Crop Type #}
+      <div class="form-group">
+        <label for="{{ form.crop_type.id_for_label }}">Crop Type *</label>
+        {{ form.crop_type }}
+        {% if form.crop_type.errors %}
+          <ul class="errorlist">{% for e in form.crop_type.errors %}<li>⚠ {{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      {# Location #}
+      <div class="form-group">
+        <label for="{{ form.location.id_for_label }}">Location</label>
+        {{ form.location }}
+        {% if form.location.errors %}
+          <ul class="errorlist">{% for e in form.location.errors %}<li>⚠ {{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      {# Planting Date #}
+      <div class="form-group">
+        <label for="{{ form.planting_date.id_for_label }}">Planting Date *</label>
+        {{ form.planting_date }}
+        {% if form.planting_date.errors %}
+          <ul class="errorlist">{% for e in form.planting_date.errors %}<li>⚠ {{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      {# Expected Harvest Date #}
+      <div class="form-group">
+        <label for="{{ form.expected_harvest_date.id_for_label }}">Expected Harvest Date</label>
+        {{ form.expected_harvest_date }}
+        {% if form.expected_harvest_date.errors %}
+          <ul class="errorlist">{% for e in form.expected_harvest_date.errors %}<li>⚠ {{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      {# Current Stage #}
+      <div class="form-group">
+        <label for="{{ form.current_stage.id_for_label }}">Current Stage *</label>
+        {{ form.current_stage }}
+        {% if form.current_stage.errors %}
+          <ul class="errorlist">{% for e in form.current_stage.errors %}<li>⚠ {{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      {# Assigned To #}
+      <div class="form-group">
+        <label for="{{ form.assigned_to.id_for_label }}">Assign to Agent</label>
+        {{ form.assigned_to }}
+        {% if form.assigned_to.errors %}
+          <ul class="errorlist">{% for e in form.assigned_to.errors %}<li>⚠ {{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      {# Admin Notes #}
+      <div class="form-group full-width">
+        <label for="{{ form.notes.id_for_label }}">Admin Notes</label>
+        {{ form.notes }}
+        {% if form.notes.errors %}
+          <ul class="errorlist">{% for e in form.notes.errors %}<li>⚠ {{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+    </div>{# end form-grid #}
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-leaf">{{ submit_label }}</button>
+      {% if field %}
+        <a href="{% url 'field_detail' field.pk %}" class="btn btn-outline">Cancel</a>
+      {% else %}
+        <a href="{% url 'field_list' %}" class="btn btn-outline">Cancel</a>
+      {% endif %}
+    </div>
+
+  </form>
+</div>
+
+{% endblock %}
