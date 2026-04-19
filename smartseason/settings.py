@@ -1,8 +1,32 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import urllib.parse
 
 load_dotenv()
+
+database_url = os.getenv('DATABASE_URL')
+if database_url:
+    parsed = urllib.parse.urlparse(database_url)
+    db_config = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': parsed.path[1:],
+        'USER': parsed.username,
+        'PASSWORD': parsed.password,
+        'HOST': parsed.hostname,
+        'PORT': parsed.port,
+    }
+else:
+    db_config = {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('DB_NAME', 'smartseason_db'),
+        'USER': os.getenv('DB_USER', 'root'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '3306'),
+    }
+
+DATABASES = {'default': db_config}
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
