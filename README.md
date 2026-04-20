@@ -2,7 +2,7 @@
 
 A field monitoring web application for tracking crop progress across multiple farm fields during a growing season. Administrators manage fields and agents, while field agents log observations and stage updates for their assigned fields.
 
-Built with Django, plain CSS, vanilla JavaScript, and MySQL.
+Built with Django, plain CSS, vanilla JavaScript, and PostgreSQL.
 
 ---
 
@@ -67,7 +67,7 @@ smartseason/
 ## Prerequisites
 
 - Python 3.10 or newer
-- MySQL 8.0 or newer, installed and running
+- PostgreSQL, installed and running
 - pip
 
 ---
@@ -76,7 +76,7 @@ smartseason/
 
 ### 1. Create the database
 
-Open a MySQL prompt and run:
+Open a PostgreSQL prompt and run:
 
 ```sql
 CREATE DATABASE smartseason_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -109,7 +109,7 @@ Create a `.env` file in the project root (alongside `manage.py`) with the follow
 SECRET_KEY=your-secret-key-here
 DB_NAME=smartseason_db
 DB_USER=root
-DB_PASSWORD=your_mysql_password
+DB_PASSWORD=your_postgresql_password
 DB_HOST=localhost
 DB_PORT=3306
 ```

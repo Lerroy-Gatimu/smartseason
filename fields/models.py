@@ -19,7 +19,7 @@ class Field(models.Model):
     Represents a single crop field being monitored during a growing season.
     """
 
-    # ── Stage choices (lifecycle of the crop) ─────────────────────────────
+    # Stage choices (lifecycle of the crop) 
     class Stage(models.TextChoices):
         PLANTED   = 'planted',   'Planted'
         GROWING   = 'growing',   'Growing'
