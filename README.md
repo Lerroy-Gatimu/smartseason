@@ -108,10 +108,10 @@ Create a `.env` file in the project root (alongside `manage.py`) with the follow
 ```
 SECRET_KEY=your-secret-key-here
 DB_NAME=smartseason_db
-DB_USER=root
+DB_USER=postgres
 DB_PASSWORD=your_postgresql_password
 DB_HOST=localhost
-DB_PORT=3306
+DB_PORT=5432
 ```
 
 ### 5. Run migrations
