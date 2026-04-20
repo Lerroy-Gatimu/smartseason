@@ -142,9 +142,6 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 ```bash
 python manage.py runserver
 ```
-
-The application will be available at https://web-production-2235c.up.railway.app/ (My deployment on Railway)
-
 ---
 
 ## Demo Credentials
