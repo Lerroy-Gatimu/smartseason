@@ -1,1 +1,1 @@
-web: gunicorn smartseason.wsgi --log-file -
+web: python manage.py collectstatic --noinput && gunicorn smartseason.wsgi --log-file -
