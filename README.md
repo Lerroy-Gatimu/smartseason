@@ -143,7 +143,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 python manage.py runserver
 ```
 
-The application will be available at http://127.0.0.1:8000.
+The application will be available at https://web-production-2235c.up.railway.app/ (My deployment on Railway)
 
 ---
 
@@ -151,11 +151,11 @@ The application will be available at http://127.0.0.1:8000.
 
 These accounts are created by the `seed_data` command.
 
-| Role         | Username | Password  |
-|--------------|----------|-----------|
-| Admin        | admin    | admin123  |
-| Field Agent  | agent1   | agent123  |
-| Field Agent  | agent2   | agent123  |
+| Role         | Username | Password      |
+|--------------|----------|-----------    |
+| Admin        | Lerroy   | smartadmin123 |
+| Field Agent  | Oscar    | smartuser123  |
+| Field Agent  | Milly    | smartuser123  |
 
 ---
 
